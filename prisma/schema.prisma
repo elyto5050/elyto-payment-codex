@@ -1,0 +1,1034 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String       @id @default(cuid())
+  name            String?
+  email           String       @unique
+  emailVerified   DateTime?
+  image           String?
+  bio             String?
+  company         String?
+  firstName       String?
+  lastName        String?
+  profession      String?
+  expectedMonthlyVolume Int?
+  onboardingCompleted Boolean @default(false)
+  website         String?
+  platformRole    PlatformRole @default(USER)
+  mfaEnabled      Boolean      @default(false)
+  mfaSecretEncrypted String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deactivatedAt   DateTime?
+  deletedAt       DateTime?
+
+  accounts        Account[]
+  blogPosts       BlogPost[]   @relation("BlogAuthor")
+  tutorials       Tutorial[]
+  sessions        Session[]
+  teamMemberships TeamMember[]
+  invitesSent     TeamInvite[] @relation("InvitesSent")
+  loginHistory    LoginHistory[]
+  securityEvents  SecurityEvent[]
+  notifications   Notification[]
+  supportMessages SupportTicketMessage[]
+  staffRole       StaffRole?
+  billingRecord   BillingRecord?
+  subscriptionPayments SubscriptionPayment[]
+  subscriptionAuditLogs SubscriptionAuditLog[]
+  platformSupportTickets PlatformSupportTicket[]
+  assignedTickets PlatformSupportTicket[] @relation("AssignedTickets")
+  platformTicketMessages PlatformTicketMessage[]
+  platformAuditLogs PlatformAuditLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id               String       @id @default(cuid())
+  name             String
+  slug             String       @unique
+  logoUrl          String?
+  ownerId          String
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  deletedAt        DateTime?
+
+  members          TeamMember[]
+  invites          TeamInvite[]
+  customRoles      CustomRole[]
+  projects         Project[]
+  apiKeys          ApiKey[]
+  gmailConnections GmailConnection[]
+  notifications    Notification[]
+  supportTickets   SupportTicket[]
+  activityLogs     ActivityLog[]
+  auditLogs        AuditLog[]
+  subscription     Subscription?
+
+  @@index([ownerId])
+  @@index([deletedAt])
+}
+
+model TeamMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           TeamRole
+  customRoleId   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customRole     CustomRole?  @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([role])
+}
+
+model Permission {
+  id          String                 @id @default(cuid())
+  key         String                 @unique
+  label       String
+  description String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  roles       CustomRolePermission[]
+}
+
+model CustomRole {
+  id             String                 @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions    CustomRolePermission[]
+  members        TeamMember[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model CustomRolePermission {
+  id           String      @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime    @default(now())
+
+  role         CustomRole  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model PlatformOwnership {
+  id                         String    @id @default(cuid())
+  ownerEmail                 String
+  ownerUserId                String?
+  transferRequestedForEmail  String?
+  transferRequestedForUserId String?
+  transferTokenHash          String?
+  transferExpiresAt          DateTime?
+  transferApprovedAt         DateTime?
+  signature                  String
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  @@index([ownerEmail])
+}
+
+model TeamInvite {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String
+  role           TeamRole
+  tokenHash      String       @unique
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("InvitesSent", fields: [invitedById], references: [id])
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@index([email])
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  organizationId  String
+  name            String
+  description     String?
+  logoUrl         String?
+  status          ProjectStatus @default(ACTIVE)
+  upiId           String?
+  publicKey       String?
+  secretKeyHash   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  archivedAt      DateTime?
+  deletedAt       DateTime?
+
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products        Product[]
+  orders          Order[]
+  transactions    Transaction[]
+  verifiedTransactions VerifiedTransaction[]
+  webhooks        WebhookEndpoint[]
+  webhookEvents   WebhookEvent[]
+  analyticsEvents AnalyticsEvent[]
+  dailyMetrics    DailyMetric[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([organizationId, deletedAt, createdAt])
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  price       Decimal       @db.Decimal(12, 2)
+  currency    String        @default("INR")
+  category    String?
+  planType    PlanType?
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model Order {
+  id                    String      @id @default(cuid())
+  publicId              String      @unique
+  projectId             String
+  productId             String?
+  customerName          String?
+  customerEmail         String?
+  amount                Decimal     @db.Decimal(12, 2)
+  currency              String      @default("INR")
+  status                OrderStatus @default(PENDING)
+  submittedUtr          String?
+  verifiedTransactionId String?     @unique
+  failureReason         String?
+  matchedEmailId        String?
+  matchedUtr            String?
+  verificationSource    String?
+  expiresAt             DateTime?
+  verifiedAt            DateTime?
+  failedAt              DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  project               Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  product               Product?    @relation(fields: [productId], references: [id])
+  verifiedTransaction   Transaction? @relation(fields: [verifiedTransactionId], references: [id])
+  verifiedUtrRecord     VerifiedTransaction?
+  webhookEvents         WebhookEvent[]
+
+  @@index([projectId])
+  @@index([productId])
+  @@index([status])
+  @@index([submittedUtr])
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@index([projectId, status, createdAt])
+}
+
+model Transaction {
+  id                  String            @id @default(cuid())
+  projectId            String
+  gmailConnectionId    String?
+  emailMessageId       String?
+  emailThreadId        String?
+  utr                  String
+  amount               Decimal           @db.Decimal(12, 2)
+  currency             String            @default("INR")
+  sender               String?
+  referenceNumber      String?
+  source               String?
+  status               TransactionStatus @default(UNMATCHED)
+  receivedAt           DateTime
+  parsedAt             DateTime          @default(now())
+  usedAt               DateTime?
+  rawSnippetEncrypted  String?
+  createdAt            DateTime          @default(now())
+
+  project              Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  gmailConnection      GmailConnection?  @relation(fields: [gmailConnectionId], references: [id])
+  verifiedOrder        Order?
+
+  @@unique([projectId, utr])
+  @@unique([emailMessageId])
+  @@index([projectId])
+  @@index([utr])
+  @@index([status])
+  @@index([receivedAt])
+  @@index([projectId, status, receivedAt])
+}
+
+model VerifiedTransaction {
+  id                 String   @id @default(cuid())
+  utr                String
+  amount             Decimal  @db.Decimal(12, 2)
+  timestamp          DateTime
+  orderId            String   @unique
+  projectId          String
+  emailMessageId     String?
+  verificationSource String   @default("gmail_fampay")
+  createdAt          DateTime @default(now())
+
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, utr])
+  @@index([utr])
+  @@index([projectId])
+}
+
+model GmailConnection {
+  id                    String                @id @default(cuid())
+  organizationId         String
+  googleEmail            String
+  accessTokenEncrypted   String
+  refreshTokenEncrypted  String
+  tokenExpiresAt         DateTime?
+  scope                  String
+  status                 GmailConnectionStatus @default(ACTIVE)
+  historyId              String?
+  lastSyncAt             DateTime?
+  lastErrorAt            DateTime?
+  lastError              String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  disconnectedAt         DateTime?
+
+  organization           Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions           Transaction[]
+  syncLogs               GmailSyncLog[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@unique([organizationId, googleEmail])
+}
+
+model GmailSyncLog {
+  id                String          @id @default(cuid())
+  gmailConnectionId String
+  status            SyncLogStatus
+  messagesScanned   Int             @default(0)
+  transactionsFound Int             @default(0)
+  errorMessage      String?
+  startedAt         DateTime        @default(now())
+  completedAt       DateTime?
+
+  gmailConnection   GmailConnection @relation(fields: [gmailConnectionId], references: [id], onDelete: Cascade)
+
+  @@index([gmailConnectionId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model ApiKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  projectId      String?
+  name           String
+  keyPrefix      String
+  keyHash        String       @unique
+  type           ApiKeyType
+  environment    Environment  @default(LIVE)
+  scopes         String[]
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+  revokedAt      DateTime?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([keyPrefix])
+}
+
+model WebhookEndpoint {
+  id          String        @id @default(cuid())
+  projectId   String
+  name        String
+  url         String
+  secretHash  String
+  events      String[]
+  status      WebhookStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  disabledAt  DateTime?
+
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  projectId   String
+  orderId     String?
+  type        String
+  payload     Json
+  createdAt   DateTime  @default(now())
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  order       Order?    @relation(fields: [orderId], references: [id])
+  deliveries  WebhookDelivery[]
+
+  @@index([projectId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model WebhookDelivery {
+  id             String                @id @default(cuid())
+  eventId         String
+  endpointId      String
+  status          WebhookDeliveryStatus @default(PENDING)
+  attemptCount    Int                   @default(0)
+  nextAttemptAt   DateTime?
+  lastAttemptAt   DateTime?
+  responseStatus  Int?
+  responseBody    String?
+  errorMessage    String?
+  durationMs      Int?
+  createdAt       DateTime              @default(now())
+
+  event           WebhookEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  endpoint        WebhookEndpoint       @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([endpointId])
+  @@index([status])
+  @@index([nextAttemptAt])
+}
+
+model Notification {
+  id             String             @id @default(cuid())
+  organizationId String
+  userId         String?
+  type           NotificationType
+  title          String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime           @default(now())
+
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([readAt])
+  @@index([createdAt])
+}
+
+model SupportTicket {
+  id             String        @id @default(cuid())
+  organizationId String
+  subject        String
+  status         TicketStatus  @default(OPEN)
+  priority       TicketPriority @default(NORMAL)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messages       SupportTicketMessage[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model SupportTicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  authorId  String?
+  body      String
+  createdAt DateTime      @default(now())
+
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User?         @relation(fields: [authorId], references: [id])
+
+  @@index([ticketId])
+}
+
+model ActivityLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  targetType     String
+  targetId       String?
+  before         Json?
+  after          Json?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  projectId String
+  type      String
+  value     Decimal? @db.Decimal(12, 2)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model DailyMetric {
+  id                 String   @id @default(cuid())
+  projectId           String
+  date                DateTime
+  revenue             Decimal  @default(0) @db.Decimal(12, 2)
+  orders              Int      @default(0)
+  paidOrders          Int      @default(0)
+  failedOrders        Int      @default(0)
+  verificationRate    Decimal  @default(0) @db.Decimal(5, 2)
+  webhookSuccessRate  Decimal  @default(0) @db.Decimal(5, 2)
+
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, date])
+  @@index([date])
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  ipAddress String?
+  userAgent String?
+  location  String?
+  success   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  severity  Severity @default(INFO)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model PlatformContent {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  content     String   @db.Text
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}
+
+// Platform-level social links used on public pages (singleton record with id = "platform")
+model SocialLinks {
+  id               String   @id
+  instagramUrl     String?
+  youtubeUrl       String?
+  discordInviteUrl String?
+  updatedById      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  plan                 SubscriptionPlan   @default(STARTER)
+  status               SubscriptionStatus @default(ACTIVE)
+  razorpaySubId        String?
+  razorpayCustomerId   String?
+  currentPeriodEnd     DateTime?
+  verificationLimit    Int                @default(500)
+  verificationsUsed    Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String?
+  content     String    @db.Text
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  authorId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author      User?     @relation("BlogAuthor", fields: [authorId], references: [id])
+
+  @@index([published])
+  @@index([publishedAt])
+  @@index([createdAt])
+}
+
+enum TutorialCategory {
+  GETTING_STARTED
+  GMAIL_INTEGRATION
+  PAYMENT_VERIFICATION
+  PROJECTS
+  ORDERS
+  WEBHOOKS
+  BILLING
+  API
+  TROUBLESHOOTING
+}
+
+model Tutorial {
+  id         String           @id @default(cuid())
+  slug       String           @unique
+  title      String
+  description String?         @db.Text
+  youtubeUrl String
+  thumbnail  String?
+  category   TutorialCategory
+  live       Boolean          @default(false)
+  viewerCount Int?
+  keywords   String[]         @default([])
+  published  Boolean          @default(false)
+  displayOrder Int            @default(9999)
+  createdBy  String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  creator    User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([published])
+  @@index([category])
+  @@index([displayOrder])
+}
+
+// RBAC: Platform-level admin roles (v2.0)
+model CustomAdminRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  staffMembers StaffRole[]
+
+  @@index([name])
+}
+
+// RBAC: Staff role assignment
+model StaffRole {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  customAdminRoleId   String?
+  customPermissions   String[] @default([])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customAdminRole     CustomAdminRole? @relation(fields: [customAdminRoleId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([customAdminRoleId])
+}
+
+// Billing: User billing records with quota tracking
+model BillingRecord {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  email              String
+  currentPlan        String   @default("FREE")
+  verificationCount  Int      @default(0)
+  projectCount       Int      @default(0)
+  lastIncrementedAt  DateTime?
+  planUpgradedAt     DateTime?
+  planDowngradedAt   DateTime?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auditLogs          BillingAuditLog[]
+
+  @@index([userId])
+  @@index([currentPlan])
+  @@index([email])
+  @@index([updatedAt])
+}
+
+// Billing: Audit log for billing events
+model BillingAuditLog {
+  id              String   @id @default(cuid())
+  billingRecordId String
+  eventType       String   // "upgrade", "downgrade", "quota_increment", "quota_reset", "adjustment"
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id], onDelete: Cascade)
+
+  @@index([billingRecordId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+// Billing: Subscription payment tracking (for self-billing)
+model SubscriptionPayment {
+  id            String   @id @default(cuid())
+  userId        String
+  userEmail     String
+  planTier      String
+  amount        Decimal  @db.Decimal(12, 2)
+  submittedUtr           String?
+  submittedTransactionId String?
+  submittedScreenshot    String?
+  paymentRef    String   @unique // SUB_userid_timestamp
+  status        String   @default("PENDING") // PENDING, VERIFIED, EXPIRED, FAILED
+  targetUPI     String   @default("aviralji@fam")
+  verifiedAt    DateTime?
+  transactionHash String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([paymentRef])
+  @@index([submittedUtr])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// Billing: Subscription audit log
+model SubscriptionAuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  eventType String   // "created", "verified", "renewed", "cancelled", "failed"
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+// Support: Enhanced ticket tracking for platform-level support (v2.0)
+model PlatformSupportTicket {
+  id            String    @id @default(cuid())
+  userId        String
+  ticketRef     String    @unique // TKT + 6 digits
+  subject       String
+  description   String    @db.Text
+  category      String    @default("OTHER") // BUG, BILLING, TECHNICAL, ACCOUNT, FEATURE_REQUEST, OTHER
+  priority      String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  status        String    @default("OPEN") // OPEN, IN_PROGRESS, WAITING, RESOLVED, CLOSED
+  userEmail     String
+  assignedToId  String?   // Staff member assigned
+  resolution    String?   @db.Text
+  escalatedAt   DateTime?
+  escalatedTo   String?   // Manager/escalation level
+  closedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedTo    User?     @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  messages      PlatformTicketMessage[]
+
+  @@index([userId])
+  @@index([ticketRef])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+// Support: Ticket messages/conversation
+model PlatformTicketMessage {
+  id            String    @id @default(cuid())
+  ticketId      String
+  senderId      String?   // Null if AI
+  senderType    String    @default("USER") // USER, SUPPORT, ADMIN, AI
+  message       String    @db.Text
+  isAiGenerated Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  ticket        PlatformSupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender        User?     @relation(fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([senderId])
+  @@index([senderType])
+  @@index([createdAt])
+}
+
+// Audit: Platform-wide admin action trail
+model PlatformAuditLog {
+  id          String   @id @default(cuid())
+  action      String   // "create_role", "assign_permission", "upgrade_plan", etc.
+  userId      String?  // Admin performing action
+  targetUserId String? // User affected
+  targetId    String?  // Resource ID (ticket, payment, etc.)
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([targetUserId])
+  @@index([createdAt])
+}
+
+enum SubscriptionPlan {
+  STARTER
+  GROWTH
+  SCALE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+enum PlatformRole {
+  USER
+  ADMIN
+  SUPPORT
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  DISABLED
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+enum PlanType {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  LIFETIME
+}
+
+enum OrderStatus {
+  PENDING
+  UTR_SUBMITTED
+  VERIFIED
+  VERIFYING
+  PAID
+  FAILED
+  REFUNDED
+  EXPIRED
+  CANCELLED
+}
+
+enum TransactionStatus {
+  UNMATCHED
+  MATCHED
+  USED
+  DUPLICATE
+  IGNORED
+  SUSPICIOUS
+}
+
+enum GmailConnectionStatus {
+  ACTIVE
+  DISCONNECTED
+  ERROR
+  EXPIRED
+}
+
+enum SyncLogStatus {
+  STARTED
+  SUCCESS
+  FAILED
+}
+
+enum ApiKeyType {
+  PUBLIC
+  SECRET
+}
+
+enum Environment {
+  TEST
+  LIVE
+}
+
+enum WebhookStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
+  CANCELLED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  SECURITY
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}

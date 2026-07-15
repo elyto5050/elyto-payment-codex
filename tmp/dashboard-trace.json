@@ -1,0 +1,808 @@
+{
+  "base": "http://localhost:3000",
+  "traceOrg": "cmq92zgqm0000slrw2dimgbl8",
+  "sequential": [
+    {
+      "name": "stats",
+      "url": "http://localhost:3000/api/dashboard/stats",
+      "start": 1781499408178,
+      "end": 1781499409649,
+      "duration": 1471,
+      "status": 200,
+      "serverTiming": "total;dur=1511, getOrderStats;dur=235, listProjects;dur=897, orders;dur=379",
+      "body": {
+        "data": {
+          "stats": {
+            "totalOrders": 3,
+            "paidOrders": 1,
+            "failedOrders": 1,
+            "revenue": 100,
+            "verificationRate": 33.33,
+            "activeProjects": 3,
+            "webhookSuccessRate": 100
+          },
+          "recentOrders": [
+            {
+              "id": "cmq9d174t0001sl288uut0w68",
+              "publicId": "ord_80105d1b8cbe45fd8d05",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "VERIFIED",
+              "submittedUtr": "TEST999888777",
+              "verifiedTransactionId": "cmq9d4mch0009sl28l36q4nyz",
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": "TEST999888777",
+              "verificationSource": "gmail_fampay",
+              "expiresAt": "2026-06-11T11:03:57.340Z",
+              "verifiedAt": "2026-06-11T10:36:38.227Z",
+              "failedAt": null,
+              "createdAt": "2026-06-11T10:33:57.341Z",
+              "updatedAt": "2026-06-11T10:36:39.171Z",
+              "product": null
+            },
+            {
+              "id": "cmq9bvdw3000hslvokt9d37i9",
+              "publicId": "ord_feb6b4083734420e8702",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "FAILED",
+              "submittedUtr": "TEST123456789",
+              "verifiedTransactionId": null,
+              "failureReason": "TIME_WINDOW_EXPIRED",
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:31:26.545Z",
+              "verifiedAt": null,
+              "failedAt": "2026-06-11T10:38:00.220Z",
+              "createdAt": "2026-06-11T10:01:26.547Z",
+              "updatedAt": "2026-06-11T10:38:00.221Z",
+              "product": null
+            },
+            {
+              "id": "cmq9btdca000bslvolur2ldgc",
+              "publicId": "ord_1267fdedee5b413eaba7",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "PENDING",
+              "submittedUtr": null,
+              "verifiedTransactionId": null,
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:29:52.520Z",
+              "verifiedAt": null,
+              "failedAt": null,
+              "createdAt": "2026-06-11T09:59:52.522Z",
+              "updatedAt": "2026-06-11T09:59:52.522Z",
+              "product": null
+            }
+          ],
+          "debug": {
+            "queries": [
+              {
+                "query": "SELECT 1",
+                "duration": 101
+              },
+              {
+                "query": "SELECT \"public\".\"Project\".\"id\", \"public\".\"Project\".\"organizationId\", \"public\".\"Project\".\"name\", \"public\".\"Project\".\"description\", \"public\".\"Project\".\"logoUrl\", \"public\".\"Project\".\"status\"::text, \"public\".\"Project\".\"upiId\", \"public\".\"Project\".\"publicKey\", \"public\".\"Project\".\"secretKeyHash\", \"public\".\"Project\".\"createdAt\", \"public\".\"Project\".\"updatedAt\", \"public\".\"Project\".\"archivedAt\", \"public\".\"Project\".\"deletedAt\", COALESCE(\"aggr_selection_0_Order\".\"_aggr_count_orders\", 0) AS \"_aggr_count_orders\", COALESCE(\"aggr_selection_1_Product\".\"_aggr_count_products\", 0) AS \"_aggr_count_products\" FROM \"public\".\"Project\" LEFT JOIN (SELECT \"public\".\"Order\".\"projectId\", COUNT(*) AS \"_aggr_count_orders\" FROM \"public\".\"Order\" WHERE 1=1 GROUP BY \"public\".\"Order\".\"projectId\") AS \"aggr_selection_0_Order\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_0_Order\".\"projectId\") LEFT JOIN (SELECT \"public\".\"Product\".\"projectId\", COUNT(*) AS \"_aggr_count_products\" FROM \"public\".\"Product\" WHERE 1=1 GROUP BY \"public\".\"Product\".\"projectId\") AS \"aggr_selection_1_Product\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_1_Product\".\"projectId\") WHERE (\"public\".\"Project\".\"organizationId\" = $1 AND \"public\".\"Project\".\"deletedAt\" IS NULL) ORDER BY \"public\".\"Project\".\"createdAt\" DESC OFFSET $2",
+                "duration": 218
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"amount\" FROM \"public\".\"Order\" LEFT JOIN \"public\".\"Project\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Order\".\"projectId\") WHERE (\"j0\".\"organizationId\" = $1 AND \"j0\".\"deletedAt\" IS NULL AND (\"j0\".\"id\" IS NOT NULL)) OFFSET $2",
+                "duration": 220
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"publicId\", \"public\".\"Order\".\"projectId\", \"public\".\"Order\".\"productId\", \"public\".\"Order\".\"customerName\", \"public\".\"Order\".\"customerEmail\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"submittedUtr\", \"public\".\"Order\".\"verifiedTransactionId\", \"public\".\"Order\".\"failureReason\", \"public\".\"Order\".\"matchedEmailId\", \"public\".\"Order\".\"matchedUtr\", \"public\".\"Order\".\"verificationSource\", \"public\".\"Order\".\"expiresAt\", \"public\".\"Order\".\"verifiedAt\", \"public\".\"Order\".\"failedAt\", \"public\".\"Order\".\"createdAt\", \"public\".\"Order\".\"updatedAt\" FROM \"public\".\"Order\" LEFT JOIN \"public\".\"Project\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Order\".\"projectId\") WHERE (\"j0\".\"organizationId\" = $1 AND (\"j0\".\"id\" IS NOT NULL)) ORDER BY \"public\".\"Order\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 221
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"projectId\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"projectId\" IN ($1,$2,$3) OFFSET $4",
+                "duration": 205
+              },
+              {
+                "query": "SELECT \"public\".\"WebhookEndpoint\".\"id\", \"public\".\"WebhookEndpoint\".\"status\"::text, \"public\".\"WebhookEndpoint\".\"projectId\" FROM \"public\".\"WebhookEndpoint\" WHERE \"public\".\"WebhookEndpoint\".\"projectId\" IN ($1,$2,$3) OFFSET $4",
+                "duration": 227
+              },
+              {
+                "query": "SELECT \"public\".\"WebhookDelivery\".\"id\", \"public\".\"WebhookDelivery\".\"status\"::text, \"public\".\"WebhookDelivery\".\"endpointId\" FROM \"public\".\"WebhookDelivery\" WHERE \"public\".\"WebhookDelivery\".\"endpointId\" IN ($1) ORDER BY \"public\".\"WebhookDelivery\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 209
+              }
+            ],
+            "parts": {
+              "stats": 235,
+              "projects": 897,
+              "orders": 379
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "projects",
+      "url": "http://localhost:3000/api/dashboard/projects",
+      "start": 1781499409662,
+      "end": 1781499410503,
+      "duration": 841,
+      "status": 200,
+      "serverTiming": "total;dur=631, listProjects;dur=631",
+      "body": {
+        "data": {
+          "data": [
+            {
+              "id": "cmq9bgzp70001slvotlggkucu",
+              "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+              "name": "5 gb mc server",
+              "description": null,
+              "logoUrl": null,
+              "status": "ACTIVE",
+              "upiId": "aviralji@fam",
+              "publicKey": "elyto_pk_live_raDvW1gjMnEar3MSdsyvqEVFCjWq5q3hRvjLJy-cv7c",
+              "secretKeyHash": "ff2bd5d02dc8956d8852c5d1ceab61bf7b27f6f5e443149d0955147acb9f6a99",
+              "createdAt": "2026-06-11T09:50:14.970Z",
+              "updatedAt": "2026-06-11T09:54:44.217Z",
+              "archivedAt": null,
+              "deletedAt": null,
+              "_count": {
+                "orders": 0,
+                "products": 0
+              },
+              "metrics": {
+                "revenue": 0,
+                "paidOrders": 0,
+                "verificationRate": 0,
+                "webhookSuccessRate": 100
+              }
+            },
+            {
+              "id": "cmq96x6zq0001slrsa2f2svdn",
+              "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+              "name": "eeee",
+              "description": null,
+              "logoUrl": null,
+              "status": "ACTIVE",
+              "upiId": "eee",
+              "publicKey": "elyto_pk_live_ZxONSZG20L-Tn4bZqCx118ppnKOy4RGhSwIhuPVLTRo",
+              "secretKeyHash": "b33c580961c67f3b6a907d85bbe0ab3a7b6222411e38f318c0a00aaa4296bd63",
+              "createdAt": "2026-06-11T07:42:52.836Z",
+              "updatedAt": "2026-06-11T07:42:52.836Z",
+              "archivedAt": null,
+              "deletedAt": null,
+              "_count": {
+                "orders": 3,
+                "products": 0
+              },
+              "metrics": {
+                "revenue": 100,
+                "paidOrders": 1,
+                "verificationRate": 33,
+                "webhookSuccessRate": 100
+              }
+            },
+            {
+              "id": "cmq96o5td0001sl2oewu6c357",
+              "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+              "name": "a",
+              "description": null,
+              "logoUrl": null,
+              "status": "ACTIVE",
+              "upiId": "aviralji@fam",
+              "publicKey": "elyto_pk_live_M1YB5wrZUKN3AzsvJ3XUFfeZaypY5LZVcVzVpglfJAE",
+              "secretKeyHash": "b0c312f78752adafae200a622b95a09b1ebb967b83b1068ed8f72c0abadcfc12",
+              "createdAt": "2026-06-11T07:35:51.401Z",
+              "updatedAt": "2026-06-11T07:35:51.401Z",
+              "archivedAt": null,
+              "deletedAt": null,
+              "_count": {
+                "orders": 0,
+                "products": 1
+              },
+              "metrics": {
+                "revenue": 0,
+                "paidOrders": 0,
+                "verificationRate": 0,
+                "webhookSuccessRate": 100
+              }
+            }
+          ],
+          "debug": {
+            "queries": [
+              {
+                "query": "SELECT 1",
+                "duration": 207
+              },
+              {
+                "query": "SELECT \"public\".\"Project\".\"id\", \"public\".\"Project\".\"organizationId\", \"public\".\"Project\".\"name\", \"public\".\"Project\".\"description\", \"public\".\"Project\".\"logoUrl\", \"public\".\"Project\".\"status\"::text, \"public\".\"Project\".\"upiId\", \"public\".\"Project\".\"publicKey\", \"public\".\"Project\".\"secretKeyHash\", \"public\".\"Project\".\"createdAt\", \"public\".\"Project\".\"updatedAt\", \"public\".\"Project\".\"archivedAt\", \"public\".\"Project\".\"deletedAt\", COALESCE(\"aggr_selection_0_Order\".\"_aggr_count_orders\", 0) AS \"_aggr_count_orders\", COALESCE(\"aggr_selection_1_Product\".\"_aggr_count_products\", 0) AS \"_aggr_count_products\" FROM \"public\".\"Project\" LEFT JOIN (SELECT \"public\".\"Order\".\"projectId\", COUNT(*) AS \"_aggr_count_orders\" FROM \"public\".\"Order\" WHERE 1=1 GROUP BY \"public\".\"Order\".\"projectId\") AS \"aggr_selection_0_Order\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_0_Order\".\"projectId\") LEFT JOIN (SELECT \"public\".\"Product\".\"projectId\", COUNT(*) AS \"_aggr_count_products\" FROM \"public\".\"Product\" WHERE 1=1 GROUP BY \"public\".\"Product\".\"projectId\") AS \"aggr_selection_1_Product\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_1_Product\".\"projectId\") WHERE (\"public\".\"Project\".\"organizationId\" = $1 AND \"public\".\"Project\".\"deletedAt\" IS NULL) ORDER BY \"public\".\"Project\".\"createdAt\" DESC OFFSET $2",
+                "duration": 101
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"projectId\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"projectId\" IN ($1,$2,$3) OFFSET $4",
+                "duration": 97
+              },
+              {
+                "query": "SELECT \"public\".\"WebhookEndpoint\".\"id\", \"public\".\"WebhookEndpoint\".\"status\"::text, \"public\".\"WebhookEndpoint\".\"projectId\" FROM \"public\".\"WebhookEndpoint\" WHERE \"public\".\"WebhookEndpoint\".\"projectId\" IN ($1,$2,$3) OFFSET $4",
+                "duration": 97
+              },
+              {
+                "query": "SELECT \"public\".\"WebhookDelivery\".\"id\", \"public\".\"WebhookDelivery\".\"status\"::text, \"public\".\"WebhookDelivery\".\"endpointId\" FROM \"public\".\"WebhookDelivery\" WHERE \"public\".\"WebhookDelivery\".\"endpointId\" IN ($1) ORDER BY \"public\".\"WebhookDelivery\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 117
+              }
+            ],
+            "parts": {
+              "listProjects": 631
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "orders",
+      "url": "http://localhost:3000/api/dashboard/orders",
+      "start": 1781499410505,
+      "end": 1781499411223,
+      "duration": 718,
+      "status": 200,
+      "serverTiming": "total;dur=489, listOrders;dur=489",
+      "body": {
+        "data": {
+          "data": [
+            {
+              "id": "cmq9d174t0001sl288uut0w68",
+              "publicId": "ord_80105d1b8cbe45fd8d05",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "VERIFIED",
+              "submittedUtr": "TEST999888777",
+              "verifiedTransactionId": "cmq9d4mch0009sl28l36q4nyz",
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": "TEST999888777",
+              "verificationSource": "gmail_fampay",
+              "expiresAt": "2026-06-11T11:03:57.340Z",
+              "verifiedAt": "2026-06-11T10:36:38.227Z",
+              "failedAt": null,
+              "createdAt": "2026-06-11T10:33:57.341Z",
+              "updatedAt": "2026-06-11T10:36:39.171Z",
+              "product": null,
+              "project": {
+                "name": "eeee"
+              }
+            },
+            {
+              "id": "cmq9bvdw3000hslvokt9d37i9",
+              "publicId": "ord_feb6b4083734420e8702",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "FAILED",
+              "submittedUtr": "TEST123456789",
+              "verifiedTransactionId": null,
+              "failureReason": "TIME_WINDOW_EXPIRED",
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:31:26.545Z",
+              "verifiedAt": null,
+              "failedAt": "2026-06-11T10:38:00.220Z",
+              "createdAt": "2026-06-11T10:01:26.547Z",
+              "updatedAt": "2026-06-11T10:38:00.221Z",
+              "product": null,
+              "project": {
+                "name": "eeee"
+              }
+            },
+            {
+              "id": "cmq9btdca000bslvolur2ldgc",
+              "publicId": "ord_1267fdedee5b413eaba7",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "PENDING",
+              "submittedUtr": null,
+              "verifiedTransactionId": null,
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:29:52.520Z",
+              "verifiedAt": null,
+              "failedAt": null,
+              "createdAt": "2026-06-11T09:59:52.522Z",
+              "updatedAt": "2026-06-11T09:59:52.522Z",
+              "product": null,
+              "project": {
+                "name": "eeee"
+              }
+            }
+          ],
+          "debug": {
+            "queries": [
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"publicId\", \"public\".\"Order\".\"projectId\", \"public\".\"Order\".\"productId\", \"public\".\"Order\".\"customerName\", \"public\".\"Order\".\"customerEmail\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"submittedUtr\", \"public\".\"Order\".\"verifiedTransactionId\", \"public\".\"Order\".\"failureReason\", \"public\".\"Order\".\"matchedEmailId\", \"public\".\"Order\".\"matchedUtr\", \"public\".\"Order\".\"verificationSource\", \"public\".\"Order\".\"expiresAt\", \"public\".\"Order\".\"verifiedAt\", \"public\".\"Order\".\"failedAt\", \"public\".\"Order\".\"createdAt\", \"public\".\"Order\".\"updatedAt\" FROM \"public\".\"Order\" LEFT JOIN \"public\".\"Project\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Order\".\"projectId\") WHERE (\"j0\".\"organizationId\" = $1 AND \"j0\".\"deletedAt\" IS NULL AND (\"j0\".\"id\" IS NOT NULL)) ORDER BY \"public\".\"Order\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 238
+              },
+              {
+                "query": "SELECT \"public\".\"Project\".\"id\", \"public\".\"Project\".\"name\" FROM \"public\".\"Project\" WHERE \"public\".\"Project\".\"id\" IN ($1) OFFSET $2",
+                "duration": 242
+              }
+            ],
+            "parts": {
+              "listOrders": 489
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "notifications",
+      "url": "http://localhost:3000/api/dashboard/notifications",
+      "start": 1781499411225,
+      "end": 1781499411704,
+      "duration": 479,
+      "status": 200,
+      "serverTiming": "total;dur=369, listNotifications;dur=246, getUnreadCount;dur=123",
+      "body": {
+        "data": {
+          "data": {
+            "notifications": [
+              {
+                "id": "cmq9d6f1j000dslfsnf5movwa",
+                "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+                "userId": null,
+                "type": "ERROR",
+                "title": "Payment verification failed",
+                "body": "Order ord_feb6b4083734420e8702: TIME_WINDOW_EXPIRED",
+                "readAt": "2026-06-13T16:33:44.234Z",
+                "createdAt": "2026-06-11T10:38:00.872Z"
+              },
+              {
+                "id": "cmq9d4oye0007slfsdsfi0arb",
+                "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+                "userId": null,
+                "type": "SUCCESS",
+                "title": "Payment verified",
+                "body": "Order ord_80105d1b8cbe45fd8d05 verified for ₹100",
+                "readAt": "2026-06-11T20:10:25.808Z",
+                "createdAt": "2026-06-11T10:36:40.406Z"
+              }
+            ],
+            "unreadCount": 0
+          },
+          "debug": {
+            "queries": [
+              {
+                "query": "SELECT COUNT(*) AS \"_count$_all\" FROM (SELECT \"public\".\"Notification\".\"id\" FROM \"public\".\"Notification\" WHERE (\"public\".\"Notification\".\"organizationId\" = $1 AND \"public\".\"Notification\".\"readAt\" IS NULL AND \"public\".\"Notification\".\"userId\" IS NULL) OFFSET $2) AS \"sub\"",
+                "duration": 119
+              },
+              {
+                "query": "SELECT \"public\".\"Notification\".\"id\", \"public\".\"Notification\".\"organizationId\", \"public\".\"Notification\".\"userId\", \"public\".\"Notification\".\"type\"::text, \"public\".\"Notification\".\"title\", \"public\".\"Notification\".\"body\", \"public\".\"Notification\".\"readAt\", \"public\".\"Notification\".\"createdAt\" FROM \"public\".\"Notification\" WHERE (\"public\".\"Notification\".\"organizationId\" = $1 AND \"public\".\"Notification\".\"userId\" IS NULL) ORDER BY \"public\".\"Notification\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 239
+              }
+            ],
+            "parts": {
+              "listNotifications": 246,
+              "getUnreadCount": 123
+            }
+          }
+        }
+      }
+    }
+  ],
+  "parallel": [
+    {
+      "name": "stats",
+      "url": "http://localhost:3000/api/dashboard/stats",
+      "start": 1781499411708,
+      "end": 1781499412725,
+      "duration": 1017,
+      "status": 200,
+      "serverTiming": "total;dur=1223, getOrderStats;dur=258, listProjects;dur=560, orders;dur=405",
+      "body": {
+        "data": {
+          "stats": {
+            "totalOrders": 3,
+            "paidOrders": 1,
+            "failedOrders": 1,
+            "revenue": 100,
+            "verificationRate": 33.33,
+            "activeProjects": 3,
+            "webhookSuccessRate": 100
+          },
+          "recentOrders": [
+            {
+              "id": "cmq9d174t0001sl288uut0w68",
+              "publicId": "ord_80105d1b8cbe45fd8d05",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "VERIFIED",
+              "submittedUtr": "TEST999888777",
+              "verifiedTransactionId": "cmq9d4mch0009sl28l36q4nyz",
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": "TEST999888777",
+              "verificationSource": "gmail_fampay",
+              "expiresAt": "2026-06-11T11:03:57.340Z",
+              "verifiedAt": "2026-06-11T10:36:38.227Z",
+              "failedAt": null,
+              "createdAt": "2026-06-11T10:33:57.341Z",
+              "updatedAt": "2026-06-11T10:36:39.171Z",
+              "product": null
+            },
+            {
+              "id": "cmq9bvdw3000hslvokt9d37i9",
+              "publicId": "ord_feb6b4083734420e8702",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "FAILED",
+              "submittedUtr": "TEST123456789",
+              "verifiedTransactionId": null,
+              "failureReason": "TIME_WINDOW_EXPIRED",
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:31:26.545Z",
+              "verifiedAt": null,
+              "failedAt": "2026-06-11T10:38:00.220Z",
+              "createdAt": "2026-06-11T10:01:26.547Z",
+              "updatedAt": "2026-06-11T10:38:00.221Z",
+              "product": null
+            },
+            {
+              "id": "cmq9btdca000bslvolur2ldgc",
+              "publicId": "ord_1267fdedee5b413eaba7",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "PENDING",
+              "submittedUtr": null,
+              "verifiedTransactionId": null,
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:29:52.520Z",
+              "verifiedAt": null,
+              "failedAt": null,
+              "createdAt": "2026-06-11T09:59:52.522Z",
+              "updatedAt": "2026-06-11T09:59:52.522Z",
+              "product": null
+            }
+          ],
+          "debug": {
+            "queries": [],
+            "parts": {
+              "stats": 258,
+              "projects": 560,
+              "orders": 405
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "projects",
+      "url": "http://localhost:3000/api/dashboard/projects",
+      "start": 1781499411709,
+      "end": 1781499413295,
+      "duration": 1586,
+      "status": 200,
+      "serverTiming": "total;dur=1085, listProjects;dur=1085",
+      "body": {
+        "data": {
+          "data": [
+            {
+              "id": "cmq9bgzp70001slvotlggkucu",
+              "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+              "name": "5 gb mc server",
+              "description": null,
+              "logoUrl": null,
+              "status": "ACTIVE",
+              "upiId": "aviralji@fam",
+              "publicKey": "elyto_pk_live_raDvW1gjMnEar3MSdsyvqEVFCjWq5q3hRvjLJy-cv7c",
+              "secretKeyHash": "ff2bd5d02dc8956d8852c5d1ceab61bf7b27f6f5e443149d0955147acb9f6a99",
+              "createdAt": "2026-06-11T09:50:14.970Z",
+              "updatedAt": "2026-06-11T09:54:44.217Z",
+              "archivedAt": null,
+              "deletedAt": null,
+              "_count": {
+                "orders": 0,
+                "products": 0
+              },
+              "metrics": {
+                "revenue": 0,
+                "paidOrders": 0,
+                "verificationRate": 0,
+                "webhookSuccessRate": 100
+              }
+            },
+            {
+              "id": "cmq96x6zq0001slrsa2f2svdn",
+              "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+              "name": "eeee",
+              "description": null,
+              "logoUrl": null,
+              "status": "ACTIVE",
+              "upiId": "eee",
+              "publicKey": "elyto_pk_live_ZxONSZG20L-Tn4bZqCx118ppnKOy4RGhSwIhuPVLTRo",
+              "secretKeyHash": "b33c580961c67f3b6a907d85bbe0ab3a7b6222411e38f318c0a00aaa4296bd63",
+              "createdAt": "2026-06-11T07:42:52.836Z",
+              "updatedAt": "2026-06-11T07:42:52.836Z",
+              "archivedAt": null,
+              "deletedAt": null,
+              "_count": {
+                "orders": 3,
+                "products": 0
+              },
+              "metrics": {
+                "revenue": 100,
+                "paidOrders": 1,
+                "verificationRate": 33,
+                "webhookSuccessRate": 100
+              }
+            },
+            {
+              "id": "cmq96o5td0001sl2oewu6c357",
+              "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+              "name": "a",
+              "description": null,
+              "logoUrl": null,
+              "status": "ACTIVE",
+              "upiId": "aviralji@fam",
+              "publicKey": "elyto_pk_live_M1YB5wrZUKN3AzsvJ3XUFfeZaypY5LZVcVzVpglfJAE",
+              "secretKeyHash": "b0c312f78752adafae200a622b95a09b1ebb967b83b1068ed8f72c0abadcfc12",
+              "createdAt": "2026-06-11T07:35:51.401Z",
+              "updatedAt": "2026-06-11T07:35:51.401Z",
+              "archivedAt": null,
+              "deletedAt": null,
+              "_count": {
+                "orders": 0,
+                "products": 1
+              },
+              "metrics": {
+                "revenue": 0,
+                "paidOrders": 0,
+                "verificationRate": 0,
+                "webhookSuccessRate": 100
+              }
+            }
+          ],
+          "debug": {
+            "queries": [],
+            "parts": {
+              "listProjects": 1085
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "orders",
+      "url": "http://localhost:3000/api/dashboard/orders",
+      "start": 1781499411710,
+      "end": 1781499412571,
+      "duration": 861,
+      "status": 200,
+      "serverTiming": "total;dur=337, listOrders;dur=337",
+      "body": {
+        "data": {
+          "data": [
+            {
+              "id": "cmq9d174t0001sl288uut0w68",
+              "publicId": "ord_80105d1b8cbe45fd8d05",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "VERIFIED",
+              "submittedUtr": "TEST999888777",
+              "verifiedTransactionId": "cmq9d4mch0009sl28l36q4nyz",
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": "TEST999888777",
+              "verificationSource": "gmail_fampay",
+              "expiresAt": "2026-06-11T11:03:57.340Z",
+              "verifiedAt": "2026-06-11T10:36:38.227Z",
+              "failedAt": null,
+              "createdAt": "2026-06-11T10:33:57.341Z",
+              "updatedAt": "2026-06-11T10:36:39.171Z",
+              "product": null,
+              "project": {
+                "name": "eeee"
+              }
+            },
+            {
+              "id": "cmq9bvdw3000hslvokt9d37i9",
+              "publicId": "ord_feb6b4083734420e8702",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "FAILED",
+              "submittedUtr": "TEST123456789",
+              "verifiedTransactionId": null,
+              "failureReason": "TIME_WINDOW_EXPIRED",
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:31:26.545Z",
+              "verifiedAt": null,
+              "failedAt": "2026-06-11T10:38:00.220Z",
+              "createdAt": "2026-06-11T10:01:26.547Z",
+              "updatedAt": "2026-06-11T10:38:00.221Z",
+              "product": null,
+              "project": {
+                "name": "eeee"
+              }
+            },
+            {
+              "id": "cmq9btdca000bslvolur2ldgc",
+              "publicId": "ord_1267fdedee5b413eaba7",
+              "projectId": "cmq96x6zq0001slrsa2f2svdn",
+              "productId": null,
+              "customerName": "Aviral",
+              "customerEmail": "test@example.com",
+              "amount": "100",
+              "currency": "INR",
+              "status": "PENDING",
+              "submittedUtr": null,
+              "verifiedTransactionId": null,
+              "failureReason": null,
+              "matchedEmailId": null,
+              "matchedUtr": null,
+              "verificationSource": null,
+              "expiresAt": "2026-06-11T10:29:52.520Z",
+              "verifiedAt": null,
+              "failedAt": null,
+              "createdAt": "2026-06-11T09:59:52.522Z",
+              "updatedAt": "2026-06-11T09:59:52.522Z",
+              "product": null,
+              "project": {
+                "name": "eeee"
+              }
+            }
+          ],
+          "debug": {
+            "queries": [],
+            "parts": {
+              "listOrders": 337
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "notifications",
+      "url": "http://localhost:3000/api/dashboard/notifications",
+      "start": 1781499411711,
+      "end": 1781499412682,
+      "duration": 971,
+      "status": 200,
+      "serverTiming": "total;dur=756, listNotifications;dur=319, getUnreadCount;dur=437",
+      "body": {
+        "data": {
+          "data": {
+            "notifications": [
+              {
+                "id": "cmq9d6f1j000dslfsnf5movwa",
+                "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+                "userId": null,
+                "type": "ERROR",
+                "title": "Payment verification failed",
+                "body": "Order ord_feb6b4083734420e8702: TIME_WINDOW_EXPIRED",
+                "readAt": "2026-06-13T16:33:44.234Z",
+                "createdAt": "2026-06-11T10:38:00.872Z"
+              },
+              {
+                "id": "cmq9d4oye0007slfsdsfi0arb",
+                "organizationId": "cmq92zgqm0000slrw2dimgbl8",
+                "userId": null,
+                "type": "SUCCESS",
+                "title": "Payment verified",
+                "body": "Order ord_80105d1b8cbe45fd8d05 verified for ₹100",
+                "readAt": "2026-06-11T20:10:25.808Z",
+                "createdAt": "2026-06-11T10:36:40.406Z"
+              }
+            ],
+            "unreadCount": 0
+          },
+          "debug": {
+            "queries": [
+              {
+                "query": "SELECT 1",
+                "duration": 148
+              },
+              {
+                "query": "SELECT \"public\".\"Project\".\"id\", \"public\".\"Project\".\"organizationId\", \"public\".\"Project\".\"name\", \"public\".\"Project\".\"description\", \"public\".\"Project\".\"logoUrl\", \"public\".\"Project\".\"status\"::text, \"public\".\"Project\".\"upiId\", \"public\".\"Project\".\"publicKey\", \"public\".\"Project\".\"secretKeyHash\", \"public\".\"Project\".\"createdAt\", \"public\".\"Project\".\"updatedAt\", \"public\".\"Project\".\"archivedAt\", \"public\".\"Project\".\"deletedAt\", COALESCE(\"aggr_selection_0_Order\".\"_aggr_count_orders\", 0) AS \"_aggr_count_orders\", COALESCE(\"aggr_selection_1_Product\".\"_aggr_count_products\", 0) AS \"_aggr_count_products\" FROM \"public\".\"Project\" LEFT JOIN (SELECT \"public\".\"Order\".\"projectId\", COUNT(*) AS \"_aggr_count_orders\" FROM \"public\".\"Order\" WHERE 1=1 GROUP BY \"public\".\"Order\".\"projectId\") AS \"aggr_selection_0_Order\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_0_Order\".\"projectId\") LEFT JOIN (SELECT \"public\".\"Product\".\"projectId\", COUNT(*) AS \"_aggr_count_products\" FROM \"public\".\"Product\" WHERE 1=1 GROUP BY \"public\".\"Product\".\"projectId\") AS \"aggr_selection_1_Product\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_1_Product\".\"projectId\") WHERE (\"public\".\"Project\".\"organizationId\" = $1 AND \"public\".\"Project\".\"deletedAt\" IS NULL) ORDER BY \"public\".\"Project\".\"createdAt\" DESC OFFSET $2",
+                "duration": 149
+              },
+              {
+                "query": "SELECT 1",
+                "duration": 102
+              },
+              {
+                "query": "SELECT 1",
+                "duration": 96
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"amount\" FROM \"public\".\"Order\" LEFT JOIN \"public\".\"Project\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Order\".\"projectId\") WHERE (\"j0\".\"organizationId\" = $1 AND \"j0\".\"deletedAt\" IS NULL AND (\"j0\".\"id\" IS NOT NULL)) OFFSET $2",
+                "duration": 252
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"projectId\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"projectId\" IN ($1,$2,$3) OFFSET $4",
+                "duration": 119
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"publicId\", \"public\".\"Order\".\"projectId\", \"public\".\"Order\".\"productId\", \"public\".\"Order\".\"customerName\", \"public\".\"Order\".\"customerEmail\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"submittedUtr\", \"public\".\"Order\".\"verifiedTransactionId\", \"public\".\"Order\".\"failureReason\", \"public\".\"Order\".\"matchedEmailId\", \"public\".\"Order\".\"matchedUtr\", \"public\".\"Order\".\"verificationSource\", \"public\".\"Order\".\"expiresAt\", \"public\".\"Order\".\"verifiedAt\", \"public\".\"Order\".\"failedAt\", \"public\".\"Order\".\"createdAt\", \"public\".\"Order\".\"updatedAt\" FROM \"public\".\"Order\" LEFT JOIN \"public\".\"Project\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Order\".\"projectId\") WHERE (\"j0\".\"organizationId\" = $1 AND \"j0\".\"deletedAt\" IS NULL AND (\"j0\".\"id\" IS NOT NULL)) ORDER BY \"public\".\"Order\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 133
+              },
+              {
+                "query": "SELECT \"public\".\"Notification\".\"id\", \"public\".\"Notification\".\"organizationId\", \"public\".\"Notification\".\"userId\", \"public\".\"Notification\".\"type\"::text, \"public\".\"Notification\".\"title\", \"public\".\"Notification\".\"body\", \"public\".\"Notification\".\"readAt\", \"public\".\"Notification\".\"createdAt\" FROM \"public\".\"Notification\" WHERE (\"public\".\"Notification\".\"organizationId\" = $1 AND \"public\".\"Notification\".\"userId\" IS NULL) ORDER BY \"public\".\"Notification\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 120
+              },
+              {
+                "query": "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"publicId\", \"public\".\"Order\".\"projectId\", \"public\".\"Order\".\"productId\", \"public\".\"Order\".\"customerName\", \"public\".\"Order\".\"customerEmail\", \"public\".\"Order\".\"amount\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"submittedUtr\", \"public\".\"Order\".\"verifiedTransactionId\", \"public\".\"Order\".\"failureReason\", \"public\".\"Order\".\"matchedEmailId\", \"public\".\"Order\".\"matchedUtr\", \"public\".\"Order\".\"verificationSource\", \"public\".\"Order\".\"expiresAt\", \"public\".\"Order\".\"verifiedAt\", \"public\".\"Order\".\"failedAt\", \"public\".\"Order\".\"createdAt\", \"public\".\"Order\".\"updatedAt\" FROM \"public\".\"Order\" LEFT JOIN \"public\".\"Project\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Order\".\"projectId\") WHERE (\"j0\".\"organizationId\" = $1 AND (\"j0\".\"id\" IS NOT NULL)) ORDER BY \"public\".\"Order\".\"createdAt\" DESC LIMIT $2 OFFSET $3",
+                "duration": 228
+              },
+              {
+                "query": "SELECT \"public\".\"WebhookEndpoint\".\"id\", \"public\".\"WebhookEndpoint\".\"status\"::text, \"public\".\"WebhookEndpoint\".\"projectId\" FROM \"public\".\"WebhookEndpoint\" WHERE \"public\".\"WebhookEndpoint\".\"projectId\" IN ($1,$2,$3) OFFSET $4",
+                "duration": 122
+              },
+              {
+                "query": "SELECT \"public\".\"Project\".\"id\", \"public\".\"Project\".\"organizationId\", \"public\".\"Project\".\"name\", \"public\".\"Project\".\"description\", \"public\".\"Project\".\"logoUrl\", \"public\".\"Project\".\"status\"::text, \"public\".\"Project\".\"upiId\", \"public\".\"Project\".\"publicKey\", \"public\".\"Project\".\"secretKeyHash\", \"public\".\"Project\".\"createdAt\", \"public\".\"Project\".\"updatedAt\", \"public\".\"Project\".\"archivedAt\", \"public\".\"Project\".\"deletedAt\", COALESCE(\"aggr_selection_0_Order\".\"_aggr_count_orders\", 0) AS \"_aggr_count_orders\", COALESCE(\"aggr_selection_1_Product\".\"_aggr_count_products\", 0) AS \"_aggr_count_products\" FROM \"public\".\"Project\" LEFT JOIN (SELECT \"public\".\"Order\".\"projectId\", COUNT(*) AS \"_aggr_count_orders\" FROM \"public\".\"Order\" WHERE 1=1 GROUP BY \"public\".\"Order\".\"projectId\") AS \"aggr_selection_0_Order\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_0_Order\".\"projectId\") LEFT JOIN (SELECT \"public\".\"Product\".\"projectId\", COUNT(*) AS \"_aggr_count_products\" FROM \"public\".\"Product\" WHERE 1=1 GROUP BY \"public\".\"Product\".\"projectId\") AS \"aggr_selection_1_Product\" ON (\"public\".\"Project\".\"id\" = \"aggr_selection_1_Product\".\"projectId\") WHERE (\"public\".\"Project\".\"organizationId\" = $1 AND \"public\".\"Project\".\"deletedAt\" IS NULL) ORDER BY \"public\".\"Project\".\"createdAt\" DESC OFFSET $2",
+                "duration": 242
+              },
+              {
+                "query": "SELECT \"public\".\"Project\".\"id\", \"public\".\"Project\".\"name\" FROM \"public\".\"Project\" WHERE \"public\".\"Project\".\"id\" IN ($1) OFFSET $2",
+                "duration": 98
+              }
+            ],
+            "parts": {
+              "listNotifications": 319,
+              "getUnreadCount": 437
+            }
+          }
+        }
+      }
+    }
+  ],
+  "timestamp": "2026-06-15T04:56:53.299Z"
+}
