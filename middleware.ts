@@ -14,9 +14,21 @@ export default function middleware(req: NextRequest) {
   // the browser. Also rewrite Next.js data requests so client navigation works.
   {
     const hostHeader = req.headers.get("host");
+    const forwardedHost = req.headers.get("x-forwarded-host");
     const hostname = hostHeader ? hostHeader.split(":")[0] : req.nextUrl.hostname;
     const ADMIN_HOST = process.env.ADMIN_HOST || "admin.elyto.in";
     const pathname = req.nextUrl.pathname;
+
+    // Debug logging (temporary): record request and evaluation values
+    try {
+      console.log('[MIDDLEWARE DEBUG] pathname=', pathname);
+      console.log('[MIDDLEWARE DEBUG] hostHeader=', hostHeader);
+      console.log('[MIDDLEWARE DEBUG] x-forwarded-host=', forwardedHost);
+      console.log('[MIDDLEWARE DEBUG] nextUrl.hostname=', req.nextUrl.hostname);
+      console.log('[MIDDLEWARE DEBUG] ADMIN_HOST=', ADMIN_HOST);
+    } catch (e) {
+      // ignore logging errors
+    }
 
     if (hostname === ADMIN_HOST) {
       // Do not rewrite API routes or Next internals or favicon.
@@ -48,7 +60,16 @@ export default function middleware(req: NextRequest) {
         lcPath === "/sitemap.xml" ||
         lcPath === "/manifest.json";
 
-      if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !isNextStatic && !isFavicon && !looksLikeStaticFile) {
+      const rewriteCondition = !pathname.startsWith("/admin") && !pathname.startsWith("/api") && !isNextStatic && !isFavicon && !looksLikeStaticFile;
+
+      try {
+        console.log('[MIDDLEWARE DEBUG] hostnameEqualsAdmin=', hostname === ADMIN_HOST);
+        console.log('[MIDDLEWARE DEBUG] rewriteConditionPartial=', rewriteCondition);
+      } catch (e) {
+        // ignore
+      }
+
+      if (rewriteCondition) {
         // Handle Next.js data requests specially:
         // /_next/data/<buildId>/page.json  => /_next/data/<buildId>/admin/page.json
         if (isNextData) {
@@ -59,15 +80,44 @@ export default function middleware(req: NextRequest) {
             if (rest[0] !== "admin") {
               const newUrl = req.nextUrl.clone();
               newUrl.pathname = `/_next/data/${buildId}/admin/${rest.join("/")}`;
+              try {
+                console.log('[MIDDLEWARE DEBUG] willRewrite=', true);
+                console.log('[MIDDLEWARE DEBUG] rewrittenPath=', newUrl.pathname);
+              } catch (e) {
+                // ignore
+              }
               return NextResponse.rewrite(newUrl);
             }
           }
         } else {
           const newUrl = req.nextUrl.clone();
           newUrl.pathname = pathname === "/" ? "/admin" : `/admin${pathname}`;
+          try {
+            console.log('[MIDDLEWARE DEBUG] willRewrite=', true);
+            console.log('[MIDDLEWARE DEBUG] rewrittenPath=', newUrl.pathname);
+          } catch (e) {
+            // ignore
+          }
           return NextResponse.rewrite(newUrl);
         }
+      } else {
+        try {
+          console.log('[MIDDLEWARE DEBUG] willRewrite=', false);
+          console.log('[MIDDLEWARE DEBUG] reason_not_rewriting=', {
+            startsWithAdmin: pathname.startsWith("/admin"),
+            startsWithApi: pathname.startsWith("/api"),
+            isNextStatic,
+            isFavicon,
+            looksLikeStaticFile
+          });
+        } catch (e) {
+          // ignore
+        }
       }
+    } else {
+      try {
+        console.log('[MIDDLEWARE DEBUG] hostnameEqualsAdmin=', false);
+      } catch (e) {}
     }
   }
 
