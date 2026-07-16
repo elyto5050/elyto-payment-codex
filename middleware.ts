@@ -23,7 +23,32 @@ export default function middleware(req: NextRequest) {
       const isNextData = pathname.startsWith("/_next/data/");
       const isNextStatic = pathname.startsWith("/_next/static") || pathname.startsWith("/_next/image");
       const isFavicon = pathname === "/favicon.ico";
-      if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !isNextStatic && !isFavicon) {
+
+      // Minimal public/static asset detection: skip rewriting common public files
+      // or paths that look like static files by extension.
+      const publicExts = [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".svg",
+        ".webp",
+        ".ico",
+        ".css",
+        ".js",
+        ".xml",
+        ".txt",
+        ".json",
+        ".woff",
+        ".woff2"
+      ];
+      const lcPath = pathname.toLowerCase();
+      const looksLikeStaticFile = publicExts.some((ext) => lcPath.endsWith(ext)) ||
+        lcPath === "/robots.txt" ||
+        lcPath === "/sitemap.xml" ||
+        lcPath === "/manifest.json";
+
+      if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !isNextStatic && !isFavicon && !looksLikeStaticFile) {
         // Handle Next.js data requests specially:
         // /_next/data/<buildId>/page.json  => /_next/data/<buildId>/admin/page.json
         if (isNextData) {
