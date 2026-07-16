@@ -8,6 +8,44 @@ export default function middleware(req: NextRequest) {
   const isAdmin = path.startsWith("/admin");
   const isAuthPage = path === "/login" || path === "/signup";
 
+  // Host-aware internal rewrite for admin subdomain (minimal, conservative).
+  // Goal: when a request arrives at the admin host, internally rewrite it
+  // to the /admin segment (served by app/(admin)/admin) without redirecting
+  // the browser. Also rewrite Next.js data requests so client navigation works.
+  {
+    const hostHeader = req.headers.get("host");
+    const hostname = hostHeader ? hostHeader.split(":")[0] : req.nextUrl.hostname;
+    const ADMIN_HOST = process.env.ADMIN_HOST || "admin.elyto.in";
+    const pathname = req.nextUrl.pathname;
+
+    if (hostname === ADMIN_HOST) {
+      // Do not rewrite API routes or Next internals or favicon.
+      const isNextData = pathname.startsWith("/_next/data/");
+      const isNextStatic = pathname.startsWith("/_next/static") || pathname.startsWith("/_next/image");
+      const isFavicon = pathname === "/favicon.ico";
+      if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !isNextStatic && !isFavicon) {
+        // Handle Next.js data requests specially:
+        // /_next/data/<buildId>/page.json  => /_next/data/<buildId>/admin/page.json
+        if (isNextData) {
+          const parts = pathname.split("/").filter(Boolean); // ['_next','data','<buildId>', ...rest]
+          if (parts.length >= 4) {
+            const buildId = parts[2];
+            const rest = parts.slice(3);
+            if (rest[0] !== "admin") {
+              const newUrl = req.nextUrl.clone();
+              newUrl.pathname = `/_next/data/${buildId}/admin/${rest.join("/")}`;
+              return NextResponse.rewrite(newUrl);
+            }
+          }
+        } else {
+          const newUrl = req.nextUrl.clone();
+          newUrl.pathname = pathname === "/" ? "/admin" : `/admin${pathname}`;
+          return NextResponse.rewrite(newUrl);
+        }
+      }
+    }
+  }
+
   // Common Auth.js / NextAuth cookie names (only checking presence)
   const cookieNames = [
     "__Secure-authjs.session-token",
@@ -48,5 +86,5 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard', '/dashboard/:path*', '/admin/:path*', '/login', '/signup']
+  matcher: ['/', '/dashboard', '/dashboard/:path*', '/admin/:path*', '/login', '/signup']
 };
