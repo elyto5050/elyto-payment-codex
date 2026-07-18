@@ -1,9 +1,2 @@
-export function isAdminApp() {
-  const mode = process.env.APP_MODE ?? process.env.NEXT_PUBLIC_APP_MODE ?? "web";
-  return String(mode).toLowerCase() === "admin";
-}
-
-export function isWebApp() {
-  const mode = process.env.APP_MODE ?? process.env.NEXT_PUBLIC_APP_MODE ?? "web";
-  return String(mode).toLowerCase() === "web";
-}
+// lib/app-mode.ts removed — APP_MODE-based routing reverted.
+// This file intentionally left blank to remove APP_MODE helpers.
