@@ -27,7 +27,8 @@ describe('subscription payment webhook handler', () => {
       expiresAt: new Date(Date.now() + 1000 * 60 * 60)
     });
 
-    (prisma.subscriptionPayment.update as any) = jest.fn().mockResolvedValue({ id: 'pay-1', status: 'VERIFIED' });
+    (prisma.subscriptionPayment.updateMany as any) = jest.fn().mockResolvedValue({ count: 1 });
+    (prisma.subscriptionPayment.findUnique as any) = jest.fn().mockResolvedValue({ id: 'pay-1', status: 'VERIFIED' });
     (prisma.organization.findFirst as any) = jest.fn().mockResolvedValue(null);
     (prisma.teamMember.findFirst as any) = jest.fn().mockResolvedValue(null);
     (prisma.organization.create as any) = jest.fn().mockResolvedValue({ id: 'org-1' });
@@ -45,6 +46,6 @@ describe('subscription payment webhook handler', () => {
 
     expect(res.success).toBe(true);
     expect((prisma.subscription.create as any)).toHaveBeenCalled();
-    expect((prisma.subscriptionPayment.update as any)).toHaveBeenCalled();
+    expect((prisma.subscriptionPayment.updateMany as any)).toHaveBeenCalled();
   });
 });

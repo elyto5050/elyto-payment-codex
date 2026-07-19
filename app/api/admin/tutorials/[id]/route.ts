@@ -64,7 +64,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       const tut = await prisma.tutorial.findUnique({ where: { id }, select: { createdBy: true } });
       if (tut?.createdBy) {
         const creator = await prisma.user.findUnique({ where: { id: tut.createdBy }, select: { platformRole: true } });
-        if (creator?.platformRole === "OWNER") {
+        if (creator?.platformRole === "OWNER" as any) {
           return apiError("forbidden", "Cannot delete tutorials created by the platform owner.", 403);
         }
       }

@@ -114,7 +114,7 @@ export async function listProjects(organizationId: string) {
     const pid = row.projectId;
     if (!aggByProject[pid]) aggByProject[pid] = { total: 0, paid: 0, revenue: 0 };
     aggByProject[pid].total += row._count._all ?? 0;
-    if (row.status === "PAID" || row.status === "VERIFIED") {
+    if ((row as { status?: string }).status === "PAID" || (row as { status?: string }).status === "VERIFIED") {
       aggByProject[pid].paid += row._count._all ?? 0;
       aggByProject[pid].revenue += Number(row._sum.amount ?? 0);
     }

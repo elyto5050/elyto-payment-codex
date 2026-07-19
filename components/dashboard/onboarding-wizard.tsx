@@ -52,7 +52,7 @@ export function OnboardingWizard({ onComplete, onChoosePlan, isLoading = false }
   ];
 
   const recommendedInfo = getRecommendedPlanInfo(data.monthlyVolume);
-  const recommendedPlan = recommendedInfo && recommendedInfo.plan ? (PLANS[recommendedInfo.plan] as any) : null;
+  const recommendedPlan = recommendedInfo && recommendedInfo.plan ? (PLANS[recommendedInfo.plan as keyof typeof PLANS] as (typeof PLANS)[keyof typeof PLANS]) : null;
 
   const handleProfileSubmit = () => {
     if (data.firstName && data.lastName && data.profession) {

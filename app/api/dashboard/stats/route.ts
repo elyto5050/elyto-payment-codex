@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       {
         stats: {
           ...stats,
-          activeProjects: projects.filter((p) => p.status === "ACTIVE").length,
+          activeProjects: projects.filter((p: { status?: string }) => p.status === "ACTIVE").length,
           webhookSuccessRate: 100
         },
         recentOrders,

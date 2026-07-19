@@ -14,7 +14,7 @@ import { Prisma } from "@prisma/client";
 import { cacheGet, cacheSet, cacheDel } from "@/lib/server-cache";
 import { PLANS, PlanKey } from "@/lib/plans";
 
-export const BILLING_PLANS = PLANS as const;
+export const BILLING_PLANS = { ...PLANS } as const;
 
 export type BillingPlan = PlanKey;
 

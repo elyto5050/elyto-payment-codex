@@ -78,7 +78,8 @@ export default function AuthPage({ title, description, initialProviders = null }
         console.log("[AuthPage] Providers fetched:", data);
         setProviders(data);
       } catch (err) {
-        console.log("[AuthPage] Failed to fetch providers:", err?.message || err);
+        const message = err instanceof Error ? err.message : String(err);
+        console.log("[AuthPage] Failed to fetch providers:", message);
         setProviders({});
       }
     };

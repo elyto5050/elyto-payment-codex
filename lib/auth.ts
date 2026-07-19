@@ -116,7 +116,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async (req) => {
 
         if (session.user) {
           session.user.id = token.id as string;
-          session.user.email = token.email as string | undefined;
+          session.user.email = typeof token.email === "string" ? token.email : "";
           session.user.name = (token as any).name as string | undefined;
           (session.user as any).image = (token as any).picture as string | undefined;
           session.user.platformRole = token.platformRole as (import("@prisma/client").PlatformRole | undefined);

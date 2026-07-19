@@ -13,7 +13,8 @@ export type VerificationFailureReason =
   | "UTR_ALREADY_USED"
   | "AMOUNT_MISMATCH"
   | "INVALID_TRANSACTION"
-  | "DUPLICATE_SUBMISSION";
+  | "DUPLICATE_SUBMISSION"
+  | "TIME_WINDOW_EXPIRED";
 
 function isVerifiedStatus(status: OrderStatus) {
   return status === OrderStatus.VERIFIED || status === OrderStatus.PAID;

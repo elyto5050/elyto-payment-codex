@@ -33,7 +33,11 @@ describe('processSubscriptionRenewal', () => {
     expect(createArgs.data.planTier).toBe('FREE');
     // price should match canonical plan price (FREE => 0)
     expect(createArgs.data.amount).toBe((PLANS as any).FREE.price);
+    expect(res.success).toBe(true);
     expect(res.payment).toBeDefined();
+    if (!res.payment) {
+      throw new Error('Expected renewal payment to be created');
+    }
     expect(res.payment.paymentRef).toBeDefined();
   });
 });

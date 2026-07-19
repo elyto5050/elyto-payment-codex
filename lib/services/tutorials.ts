@@ -70,17 +70,21 @@ export async function listTutorials(opts?: { page?: number; pageSize?: number; s
     const total = await prisma.tutorial.count({ where });
     const rows = await prisma.tutorial.findMany({ where, orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }], skip: (page - 1) * pageSize, take: pageSize });
     let data = rows.map((r) => mapPrisma(r, admin));
+    const typedData: Array<Tutorial | null> = data;
 
     if (!admin) {
       // Ensure only a single tutorial is marked live in public responses.
-      const liveItems = data.filter((d) => !!d?.live);
+      const liveItems = typedData.filter((d): d is Tutorial => !!d?.live);
       if (liveItems.length > 1) {
         // Pick the most recently created live tutorial as the single live item.
         let latest = liveItems[0];
         for (const it of liveItems) {
-          if (new Date(it.createdAt) > new Date(latest.createdAt)) latest = it;
+          if (it.createdAt && latest.createdAt && new Date(it.createdAt) > new Date(latest.createdAt)) latest = it;
         }
-        data = data.map((d) => ({ ...d, live: d.id === latest.id }));
+        data = typedData.map((d) => {
+          if (!d) return null;
+          return { ...d, live: d.id === latest.id } as Tutorial;
+        });
       }
 
       // strip keywords (admin-only)

@@ -1,8 +1,10 @@
 export type PaymentVerificationJob = {
-  orderPublicId: string;
+  orderPublicId?: string;
+  paymentId?: string;
+  paymentRef?: string;
+  submittedUtr?: string;
   projectId?: string;
   userId?: string;
-  paymentRef?: string;
   utr?: string;
 };
 

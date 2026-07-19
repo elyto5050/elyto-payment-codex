@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
       return apiError("service_unavailable", "Verification service temporarily unavailable. Please try again later.", 503);
     }
 
+    try {
+      await queues.paymentVerification.add("verify-subscription-payment", {
+        paymentId: payment.id,
+        paymentRef: payment.paymentRef,
+        submittedUtr: utr
+      });
+    } catch (err) {
+      logger.error("submit-utr: failed to enqueue subscription verification", { paymentRef, error: err instanceof Error ? err.message : String(err) });
+      return apiError("service_unavailable", "Verification service temporarily unavailable. Please try again later.", 503);
+    }
+
     return apiOk({ matched: false, message: "UTR recorded; awaiting Gmail confirmation." });
   }
 

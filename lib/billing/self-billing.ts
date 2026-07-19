@@ -86,6 +86,64 @@ export async function createSubscriptionPayment(
  * 
  * This is the core of Elyto-in-Elyto: using own verification to confirm subscription
  */
+export async function verifySubscriptionPaymentByUtr(params: {
+  paymentId?: string;
+  paymentRef?: string;
+  submittedUtr?: string;
+}) {
+  const { paymentId, paymentRef, submittedUtr } = params;
+
+  if (!paymentId && !paymentRef) {
+    return { verified: false, reason: "missing_payment_identifier", retry: false } as const;
+  }
+
+  if (!submittedUtr) {
+    return { verified: false, reason: "missing_submitted_utr", retry: false } as const;
+  }
+
+  const payment = paymentId
+    ? await prisma.subscriptionPayment.findUnique({ where: { id: paymentId } })
+    : null;
+
+  const subscriptionPayment = payment ?? (paymentRef ? await prisma.subscriptionPayment.findUnique({ where: { paymentRef } }) : null);
+
+  if (!subscriptionPayment) {
+    return { verified: false, reason: "payment_not_found", retry: false } as const;
+  }
+
+  if (subscriptionPayment.status !== "PENDING") {
+    return { verified: true, reason: "already_verified" } as const;
+  }
+
+  if (subscriptionPayment.expiresAt && subscriptionPayment.expiresAt < new Date()) {
+    return { verified: false, reason: "expired", retry: false } as const;
+  }
+
+  const tx = await prisma.transaction.findFirst({
+    where: { utr: submittedUtr, amount: subscriptionPayment.amount },
+    orderBy: { receivedAt: "desc" }
+  });
+
+  if (!tx) {
+    return { verified: false, reason: "EMAIL_NOT_FOUND", retry: true } as const;
+  }
+
+  const result = await handleSubscriptionPaymentWebhook({
+    from: tx.sender ?? subscriptionPayment.userEmail,
+    to: SELF_BILLING_CONFIG.UPI_DESTINATION,
+    amount: Number(tx.amount),
+    transactionHash: tx.emailMessageId ?? tx.id,
+    paymentRef: subscriptionPayment.paymentRef,
+    timestamp: tx.receivedAt.toISOString()
+  } as any);
+
+  if (result?.success) {
+    return { verified: true, reason: "verified" } as const;
+  }
+
+  return { verified: false, reason: result?.reason ?? "verification_failed", retry: false } as const;
+}
+
 export async function handleSubscriptionPaymentWebhook(webhookData: {
   from: string;
   to: string;
@@ -126,15 +184,24 @@ export async function handleSubscriptionPaymentWebhook(webhookData: {
       return { success: false, reason: "Amount mismatch" };
     }
 
-    // Mark payment as verified
-    const verifiedPayment = await prisma.subscriptionPayment.update({
-      where: { id: subscriptionPayment.id },
+    // Mark payment as verified atomically to avoid duplicate processing.
+    const updateResult = await prisma.subscriptionPayment.updateMany({
+      where: { id: subscriptionPayment.id, status: "PENDING" },
       data: {
         status: "VERIFIED",
         verifiedAt: new Date(),
         transactionHash: webhookData.transactionHash,
       },
     });
+
+    if (updateResult.count === 0) {
+      return { success: true, reason: "already_verified" };
+    }
+
+    const verifiedPayment = await prisma.subscriptionPayment.findUnique({ where: { id: subscriptionPayment.id } });
+    if (!verifiedPayment) {
+      return { success: false, reason: "verification_failed" };
+    }
 
     // ========================================
     // ENTITLEMENT PROVISIONING

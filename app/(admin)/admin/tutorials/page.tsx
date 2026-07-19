@@ -46,6 +46,9 @@ export default function AdminTutorialsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-tutorials"] })
   });
 
+  const updateIsPending = updateMutation.isPending;
+  const deleteIsPending = deleteMutation.isPending;
+
   const handleToggle = (id: string, current: boolean) => {
     updateMutation.mutate({ id, patch: { published: !current } });
   };
@@ -122,13 +125,13 @@ export default function AdminTutorialsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(t)}>Edit</Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleToggleLive(t.id, !!t.live)} disabled={updateMutation.isLoading}>
+                        <Button variant="ghost" size="sm" onClick={() => handleToggleLive(t.id, !!t.live)} disabled={updateIsPending}>
                           {t.live ? "Live: ON" : "Set Live"}
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => handleToggle(t.id, !!t.published)} disabled={updateMutation.isLoading}>
+                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => handleToggle(t.id, !!t.published)} disabled={updateIsPending}>
                           {t.published ? "Unpublish" : "Publish"}
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => handleDelete(t.id)} disabled={deleteMutation.isLoading}>
+                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={() => handleDelete(t.id)} disabled={deleteIsPending}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const [listResp, unreadResp] = await Promise.all([listP, unreadP]);
 
     const notifications = listResp.res;
-    const total = listResp.total ?? 0;
+    const total = (listResp.res as { total?: number } | undefined)?.total ?? 0;
     const unreadCount = unreadResp.res;
 
     const listDur = listResp.entry?.durationMs ?? 0;

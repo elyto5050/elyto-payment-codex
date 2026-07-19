@@ -53,7 +53,7 @@ export default function TutorialsClient() {
   return (
     <div className="relative min-h-screen bg-[linear-gradient(#050505,#050505)] text-white">
       {/* Animated background blobs */}
-      <motion.div initial={{ opacity: 0.2, scale: 0.8 }} animate={{ opacity: [0.2,0.35,0.2], scale: [0.8,1,0.8] }} transition={{ duration: 8, loop: Infinity }} className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
+      <motion.div initial={{ opacity: 0.2, scale: 0.8 }} animate={{ opacity: [0.2,0.35,0.2], scale: [0.8,1,0.8] }} transition={{ duration: 8 }} className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
         <div style={{ width: 800, height: 600, filter: 'blur(80px)', background: 'radial-gradient(circle at 20% 30%, rgba(6,182,212,0.18), transparent 20%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.12), transparent 25%)' }} />
       </motion.div>
 
