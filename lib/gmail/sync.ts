@@ -89,41 +89,61 @@ export async function syncGmailConnection(gmailConnectionId: string) {
     }
 
     if (messageIds.length === 0) {
+      const searchQuery = "(from:(fampay.in OR famapp.in) OR subject:(\"Your payment of\" OR \"payment of\" OR fampay OR FamPay)) newer_than:30d";
+      logger.info("Gmail search started", { gmailConnectionId, searchQuery });
       // Use an efficient Gmail search filter focused on FamPay senders and subjects
       const list = await gmail.users.messages.list({
         userId: "me",
-        q: "(from:(fampay.in OR famapp.in) OR subject:(\"Your payment of\" OR \"payment of\" OR fampay OR FamPay)) newer_than:30d",
+        q: searchQuery,
         maxResults: 100
       });
       messageIds = (list.data.messages ?? []).map((message) => message.id).filter(Boolean) as string[];
+      logger.info("Gmail search completed", { gmailConnectionId, searchQuery, messageIdsReturned: messageIds.length });
     }
 
     let transactionsFound = 0;
 
     for (const messageId of messageIds) {
-      if (!messageId) continue;
+      if (!messageId) {
+        logger.info("Skipping Gmail message", { gmailConnectionId, reason: "missing_message_id" });
+        continue;
+      }
 
       // Skip messages already processed globally
       const existing = await prisma.transaction.findUnique({ where: { emailMessageId: messageId } });
-      if (existing) continue;
+      if (existing) {
+        logger.info("Skipping Gmail message", { gmailConnectionId, messageId, reason: "duplicate_emailMessageId", transactionId: existing.id });
+        continue;
+      }
 
       const detail = await gmail.users.messages.get({ userId: "me", id: messageId, format: "full" });
       const headers = detail.data.payload?.headers ?? [];
       const fromHeader = getHeaderValue(headers, "From");
-
-      // Allowlist by domain is helpful but don't rely exclusively on it — subject+body parsing is authoritative
-      if (!isAllowedSender(fromHeader) && !/payment of|Your payment of|fampay|famapp/i.test(getHeaderValue(headers, "Subject"))) {
-        continue;
-      }
-
+      const subject = getHeaderValue(headers, "Subject");
       const dateHeader = headers.find((h) => h.name?.toLowerCase() === "date")?.value;
       const receivedAt = dateHeader ? new Date(dateHeader) : new Date();
 
+      logger.info("Fetched Gmail message", {
+        gmailConnectionId,
+        messageId,
+        from: fromHeader,
+        subject,
+        date: dateHeader ?? receivedAt.toISOString()
+      });
+
+      // Allowlist by domain is helpful but don't rely exclusively on it — subject+body parsing is authoritative
+      if (!isAllowedSender(fromHeader) && !/payment of|Your payment of|fampay|famapp/i.test(subject)) {
+        logger.info("Skipping Gmail message", { gmailConnectionId, messageId, reason: "sender_rejected", from: fromHeader, subject });
+        continue;
+      }
+
       const body = extractEmailBody(detail.data.payload);
-      const subject = getHeaderValue(headers, "Subject");
       // Use strict parser: must return amount + utr
       const parsed = parseFamPayEmail(body, receivedAt, subject);
-      if (!parsed) continue;
+      if (!parsed) {
+        logger.warn("Skipping Gmail message", { gmailConnectionId, messageId, reason: "parser_returned_null", subject, from: fromHeader, date: dateHeader ?? receivedAt.toISOString() });
+        continue;
+      }
 
       // Check for any pending self-billing subscription payments submitted by the owner
       try {
@@ -163,26 +183,53 @@ export async function syncGmailConnection(gmailConnectionId: string) {
       for (const project of projects) {
         // Duplicate protection: check by emailMessageId first
         const alreadyProcessed = await prisma.transaction.findUnique({ where: { emailMessageId: messageId } });
-        if (alreadyProcessed) continue;
+        if (alreadyProcessed) {
+          logger.info("Skipping Gmail message", { gmailConnectionId, messageId, reason: "duplicate_emailMessageId", projectId: project.id });
+          continue;
+        }
 
         // Also ensure UTR uniqueness per project; if utr already verified or used, skip
         const utrExists = await prisma.transaction.findFirst({ where: { projectId: project.id, utr: parsed.utr } });
-        if (utrExists) continue;
+        if (utrExists) {
+          logger.info("Skipping Gmail message", { gmailConnectionId, messageId, reason: "duplicate_utr", projectId: project.id, utr: parsed.utr });
+          continue;
+        }
 
-        await prisma.transaction.create({
-          data: {
+        logger.info("Creating transaction from Gmail message", {
+          gmailConnectionId,
+          messageId,
+          projectId: project.id,
+          utr: parsed.utr,
+          amount: parsed.amount,
+          sender: parsed.sender
+        });
+
+        try {
+          await prisma.transaction.create({
+            data: {
+              projectId: project.id,
+              gmailConnectionId: connection.id,
+              emailMessageId: messageId,
+              utr: parsed.utr,
+              amount: parsed.amount,
+              sender: parsed.sender,
+              referenceNumber: parsed.referenceNumber,
+              source: parsed.source,
+              status: TransactionStatus.UNMATCHED,
+              receivedAt: parsed.receivedAt
+            }
+          });
+        } catch (error) {
+          logger.error("Failed to create transaction from Gmail message", {
+            gmailConnectionId,
+            messageId,
             projectId: project.id,
-            gmailConnectionId: connection.id,
-            emailMessageId: messageId,
             utr: parsed.utr,
             amount: parsed.amount,
-            sender: parsed.sender,
-            referenceNumber: parsed.referenceNumber,
-            source: parsed.source,
-            status: TransactionStatus.UNMATCHED,
-            receivedAt: parsed.receivedAt
-          }
-        });
+            error: error instanceof Error ? error.message : String(error)
+          });
+          throw error;
+        }
 
         transactionsFound += 1;
 

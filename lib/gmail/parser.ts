@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 export type ParsedTransaction = {
   utr: string;
   amount: number;
@@ -35,6 +37,7 @@ function stripHtml(html: string) {
 export function parseFamPayEmail(text: string, receivedAt = new Date(), subject?: string): ParsedTransaction | null {
   const body = text.trim().startsWith("<") ? stripHtml(text) : text;
   if (failurePattern.test(body)) {
+    logger.warn("parseFamPayEmail returned null", { reason: "email_marked_failure", subject, textPreview: body.slice(0, 200) });
     return null;
   }
 
@@ -57,11 +60,27 @@ export function parseFamPayEmail(text: string, receivedAt = new Date(), subject?
   const amount = amountMatch ? Number(amountMatch.replaceAll(",", "")) : null;
 
   // Quick fail if amount or UTR missing
-  if (!amount || !utr) return null;
+  if (!amount || !utr) {
+    logger.warn("parseFamPayEmail returned null", {
+      reason: "missing_amount_or_utr",
+      utr: utr ?? null,
+      amount: amount ?? null,
+      subject,
+      textPreview: body.slice(0, 200)
+    });
+    return null;
+  }
 
   // Determine explicit success status
   const paymentSuccessful = successPattern.test(body) || (subject ? successPattern.test(subject) : false);
-  if (!paymentSuccessful) return null;
+  if (!paymentSuccessful) {
+    logger.warn("parseFamPayEmail returned null", {
+      reason: "payment_not_successful",
+      subject,
+      textPreview: body.slice(0, 200)
+    });
+    return null;
+  }
 
   // Try to extract merchant / sender name using conservative heuristics
   let sender: string | undefined;
@@ -72,6 +91,16 @@ export function parseFamPayEmail(text: string, receivedAt = new Date(), subject?
 
   // Use transactionId as referenceNumber when present
   const referenceNumber = transactionId ?? utr;
+
+  logger.info("parseFamPayEmail succeeded", {
+    utr,
+    amount,
+    sender,
+    referenceNumber,
+    transactionId,
+    subject,
+    source: "gmail_fampay"
+  });
 
   return {
     utr,
