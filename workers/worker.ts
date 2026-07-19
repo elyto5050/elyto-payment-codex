@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { createLogger } from "@/lib/logger";
 import { startHealthServer } from "@/workers/health/server";
 import { validateWorkerEnv } from "@/workers/lib/env";
