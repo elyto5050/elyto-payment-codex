@@ -21,8 +21,8 @@ const utrPatterns = [
 
 const amountPattern = /(?:INR|Rs\.?|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i;
 
-// Accept a wider variety of success phrases (including "is successful")
-const successPattern = /\b(?:sent successfully|payment successful|successfully (?:sent|paid|completed)|is successful|successful)\b/i;
+// Accept a wider variety of success phrases for both outgoing and incoming FamPay/FamX emails.
+const successPattern = /\b(?:sent successfully|payment successful|successfully (?:sent|paid|completed|received)|is successful|successful|you received|received(?:\s+successfully)?|received\s+₹)\b/i;
 const failurePattern = /\b(?:failed|declined|rejected|unsuccessful|reversed|refunded)\b/i;
 
 function stripHtml(html: string) {
@@ -84,9 +84,16 @@ export function parseFamPayEmail(text: string, receivedAt = new Date(), subject?
 
   // Try to extract merchant / sender name using conservative heuristics
   let sender: string | undefined;
-  const toMatch = body.match(/\bfrom\s+([A-Za-z0-9 &\-\.,]{2,80})/i) ?? body.match(/\bto\s+([A-Za-z0-9 &\-\.,]{2,80})/i);
-  if (toMatch && toMatch[1]) {
-    sender = toMatch[1].trim().replace(/[\.\,]$/g, "");
+  const senderPatterns = [
+    /\bfrom\s+([A-Za-z0-9&\-\., ]{2,80})(?=\s+(?:at|on|for|to|$))/i,
+    /\bto\s+([A-Za-z0-9&\-\., ]{2,80})(?=\s+(?:at|on|for|to|$))/i,
+    /\bfrom\s+([A-Za-z0-9&\-\., ]{2,80})/i,
+    /\bto\s+([A-Za-z0-9&\-\., ]{2,80})/i
+  ];
+  const senderMatch = senderPatterns.map((pattern) => body.match(pattern)?.[1]).find(Boolean);
+  if (senderMatch) {
+    sender = senderMatch.trim().replace(/[\.\,]$/g, "");
+    sender = sender.replace(/\s+(?:at|on)\b.*$/i, "").trim();
   }
 
   // Use transactionId as referenceNumber when present
